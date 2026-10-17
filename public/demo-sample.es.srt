@@ -1,0 +1,19 @@
+1
+00:00:00,800 --> 00:00:04,500
+Bienvenido a VLC Reborn — Un Reproductor Multimedia de Próxima Generación
+
+2
+00:00:05,200 --> 00:00:09,000
+Rediseñado después de 25 años con aceleración por hardware y controles fluidos
+
+3
+00:00:09,800 --> 00:00:14,200
+Despliega el Inspector Deck para ajustar subtítulos, audio y filtros de video
+
+4
+00:00:14,900 --> 00:00:19,800
+Sincronización milimétrica de subtítulos, ecualizador de 10 bandas y volumen cónico
+
+5
+00:00:20,500 --> 00:00:27,000
+Diseñado para precisión, rendimiento y pura elegancia de escritorio.

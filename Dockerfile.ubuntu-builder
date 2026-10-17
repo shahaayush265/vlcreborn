@@ -1,0 +1,20 @@
+FROM ubuntu:26.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    wget \
+    file \
+    pkg-config \
+    libwebkit2gtk-4.1-dev \
+    libayatana-appindicator3-dev \
+    librsvg2-dev \
+    libssl-dev \
+    libxdo-dev \
+    libatomic1 \
+    libfuse2t64 \
+    squashfs-tools \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*

@@ -1,0 +1,359 @@
+@import "tailwindcss";
+
+@theme {
+  --color-void: #0d0d11;
+  --color-surface: #16161e;
+  --color-surface-elevated: #1f1f2b;
+  --color-border: #262635;
+  --color-border-subtle: #262635;
+  --color-border-highlight: #3a3a4e;
+
+  --color-vlc-orange: #ff5c00;
+  --color-vlc-orange-hover: #ff7526;
+  --color-vlc-orange-glow: rgba(255, 92, 0, 0.25);
+  --color-vlc-orange-dim: rgba(255, 92, 0, 0.12);
+
+  --color-text-primary: #f4f4f7;
+  --color-text-secondary: #c2c2d1;
+  --color-text-muted: #8a8a9e;
+
+  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+:root {
+  --bg-primary: #0d0d11;
+  --bg-surface: #16161e;
+  --border: #262635;
+  --vlc-orange: #ff5c00;
+  --vlc-orange-glow: rgba(255, 92, 0, 0.25);
+  --text-primary: #f4f4f7;
+  --text-muted: #8a8a9e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #0d0d11;
+  color: #f4f4f7;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom sleek scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #262635;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3a3a4e;
+}
+
+/* Dynamic Accent Engine: Overrides all orange accents and glows when a custom accent is selected */
+[data-accent] {
+  --dynamic-accent: var(--accent-primary, #ff5c00);
+  --dynamic-accent-hover: var(--accent-hover, #ff7526);
+  --dynamic-accent-glow: var(--accent-glow, rgba(255, 92, 0, 0.4));
+  --dynamic-accent-dim: var(--accent-dim, rgba(255, 92, 0, 0.12));
+}
+
+[data-accent] [class*="text-[#FF5C00]"]:not([class*="hover:"]):not([class*="group-hover"]),
+[data-accent] [class*="text-[#ff5c00]"]:not([class*="hover:"]):not([class*="group-hover"]) {
+  color: var(--dynamic-accent) !important;
+}
+
+[data-accent] [class*="bg-[#FF5C00]/"],
+[data-accent] [class*="bg-[#ff5c00]/"] {
+  background-color: var(--dynamic-accent-dim) !important;
+}
+
+[data-accent] [class*="bg-[#FF5C00]"]:not([class*="bg-[#FF5C00]/"]):not([class*="hover:"]):not([class*="group-hover"]),
+[data-accent] [class*="bg-[#ff5c00]"]:not([class*="bg-[#ff5c00]/"]):not([class*="hover:"]):not([class*="group-hover"]) {
+  background-color: var(--dynamic-accent) !important;
+}
+
+[data-accent] [class*="border-[#FF5C00]"]:not([class*="hover:"]):not([class*="group-hover"]),
+[data-accent] [class*="border-[#ff5c00]"]:not([class*="hover:"]):not([class*="group-hover"]) {
+  border-color: var(--dynamic-accent) !important;
+}
+
+/* Gradients in Tailwind v4 */
+[data-accent] [class*="from-[#FF5C00]"],
+[data-accent] [class*="from-[#ff5c00]"],
+[data-accent] [class*="from-[#FF7A29]"],
+[data-accent] [class*="from-[#ff7a29]"] {
+  background-image: linear-gradient(135deg, var(--dynamic-accent), var(--dynamic-accent-hover)) !important;
+}
+
+[data-accent] [class*="hover:bg-[#FF5C00]"]:hover,
+[data-accent] [class*="hover:bg-[#ff5c00]"]:hover {
+  background-color: var(--dynamic-accent) !important;
+}
+
+[data-accent] [class*="hover:text-[#FF5C00]"]:hover,
+[data-accent] [class*="hover:text-[#ff5c00]"]:hover,
+[data-accent] .group:hover [class*="group-hover:text-[#FF5C00]"],
+[data-accent] .group:hover [class*="group-hover:text-[#ff5c00]"],
+[data-accent] [class*="group/settings"]:hover [class*="group-hover/settings:text-[#FF5C00]"],
+[data-accent] [class*="group/tip"]:hover [class*="group-hover/tip:text-[#FF5C00]"] {
+  color: var(--dynamic-accent) !important;
+}
+
+[data-accent] [class*="hover:border-[#FF5C00]"]:hover,
+[data-accent] [class*="hover:border-[#ff5c00]"]:hover {
+  border-color: var(--dynamic-accent) !important;
+}
+
+/* ALL shadows containing 255,92,0 or #FF5C00 */
+[data-accent] [class*="shadow-"][class*="255,92,0"],
+[data-accent] [class*="shadow-"][class*="255, 92, 0"],
+[data-accent] [class*="shadow-"][class*="FF5C00"],
+[data-accent] [class*="shadow-"][class*="ff5c00"],
+[data-accent] .glow-orange,
+[data-accent] .glow-orange-sm {
+  box-shadow: 0 0 16px -1px var(--dynamic-accent-glow) !important;
+}
+
+/* ALL drop-shadows containing 255,92,0 or #FF5C00 */
+[data-accent] [class*="drop-shadow-"][class*="255,92,0"],
+[data-accent] [class*="drop-shadow-"][class*="255, 92, 0"],
+[data-accent] [class*="drop-shadow-"][class*="FF5C00"],
+[data-accent] [class*="drop-shadow-"][class*="ff5c00"] {
+  filter: drop-shadow(0 4px 14px var(--dynamic-accent-glow)) !important;
+}
+
+[data-accent] [class*="ring-[#FF5C00]"],
+[data-accent] [class*="ring-[#ff5c00]"] {
+  --tw-ring-color: var(--dynamic-accent-dim) !important;
+}
+
+/* Range input sliders accent color across all tabs */
+[data-accent] input[type="range"],
+[data-accent] [class*="accent-[#FF5C00]"],
+[data-accent] [class*="accent-[#ff5c00]"] {
+  accent-color: var(--dynamic-accent, #ff5c00) !important;
+}
+
+/* SVG Gradients & Stops */
+[data-accent] stop[stop-color*="FF5C00"],
+[data-accent] stop[stop-color*="ff5c00"],
+[data-accent] stop[stop-color*="FF7A29"],
+[data-accent] stop[stop-color*="FF3D00"] {
+  stop-color: var(--dynamic-accent) !important;
+}
+
+/* OLED Black Theme: Pitch black backgrounds and deep contrasts */
+html[data-theme="oled"],
+html[data-theme="oled"] body,
+html[data-theme="oled"] #root {
+  background-color: #000000 !important;
+}
+
+html[data-theme="oled"] .bg-\[\#0D0D11\],
+html[data-theme="oled"] .bg-\[\#0d0d11\],
+html[data-theme="oled"] .bg-\[\#0D0D15\]\/80 {
+  background-color: #000000 !important;
+}
+
+html[data-theme="oled"] .bg-\[\#16161E\],
+html[data-theme="oled"] .bg-\[\#16161E\]\/95,
+html[data-theme="oled"] .bg-\[\#16161E\]\/80,
+html[data-theme="oled"] .bg-\[\#16161e\],
+html[data-theme="oled"] .bg-\[\#161622\]\/95 {
+  background-color: #060608 !important;
+}
+
+html[data-theme="oled"] .bg-\[\#1F1F2B\],
+html[data-theme="oled"] .bg-\[\#1f1f2b\],
+html[data-theme="oled"] .bg-\[\#1A1A24\],
+html[data-theme="oled"] .bg-\[\#1B1B26\],
+html[data-theme="oled"] .bg-\[\#1E1E2C\] {
+  background-color: #0d0d12 !important;
+}
+
+html[data-theme="oled"] .border-\[\#262635\],
+html[data-theme="oled"] .border-\[\#262635\]\/50,
+html[data-theme="oled"] .border-\[\#262635\]\/60 {
+  border-color: #161620 !important;
+}
+
+/* Refined Light Frosted Theme */
+html[data-theme="light"],
+html[data-theme="light"] body,
+html[data-theme="light"] #root {
+  background-color: #f1f4f9 !important;
+  color: #0f172a !important;
+}
+
+/* Backgrounds in Light Mode - Primary Elevated Panels & Drawers */
+html[data-theme="light"] [class*="bg-[#16161E]"],
+html[data-theme="light"] [class*="bg-[#161622]"],
+html[data-theme="light"] [class*="bg-[#101016]"],
+html[data-theme="light"] [class*="bg-[#12121A]"],
+html[data-theme="light"] [class*="bg-[#0F0F17]"],
+html[data-theme="light"] [class*="bg-[#0D0D15]"],
+html[data-theme="light"] [class*="bg-[#13131A]"] {
+  background-color: rgba(255, 255, 255, 0.94) !important;
+  box-shadow: 0 16px 45px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* Secondary Panels, Sub-surfaces & Sidebars in Light Mode */
+html[data-theme="light"] [class*="bg-[#1F1F2B]"],
+html[data-theme="light"] [class*="bg-[#1A1A24]"],
+html[data-theme="light"] [class*="bg-[#1B1B26]"],
+html[data-theme="light"] [class*="bg-[#1E1E2C]"],
+html[data-theme="light"] [class*="bg-[#1A1A26]"],
+html[data-theme="light"] [class*="bg-[#14141C]"],
+html[data-theme="light"] [class*="bg-[#14141E]"],
+html[data-theme="light"] [class*="bg-[#181822]"],
+html[data-theme="light"] [class*="bg-[#181824]"],
+html[data-theme="light"] [class*="bg-[#0E0E14]"],
+html[data-theme="light"] [class*="bg-[#121218]"],
+html[data-theme="light"] [class*="bg-[#111117]"] {
+  background-color: #f8fafc !important;
+}
+
+/* Hover background states in Light Mode */
+html[data-theme="light"] [class*="hover:bg-[#1F1F2B]"]:hover,
+html[data-theme="light"] [class*="hover:bg-[#1f1f2b]"]:hover,
+html[data-theme="light"] [class*="hover:bg-[#2A2A3B]"]:hover,
+html[data-theme="light"] [class*="hover:bg-[#2A2A3C]"]:hover,
+html[data-theme="light"] [class*="hover:bg-[#252535]"]:hover,
+html[data-theme="light"] [class*="hover:bg-[#1B1B26]"]:hover,
+html[data-theme="light"] [class*="hover:bg-[#1E1E2C]"]:hover,
+html[data-theme="light"] [class*="hover:bg-[#16161E]"]:hover {
+  background-color: #e2e8f0 !important;
+}
+
+/* Input / Select fields in Light Mode */
+html[data-theme="light"] input,
+html[data-theme="light"] select,
+html[data-theme="light"] textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html[data-theme="light"] input::placeholder,
+html[data-theme="light"] textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Text colors in Light Mode */
+html[data-theme="light"] [class*="text-[#F4F4F7]"],
+html[data-theme="light"] [class*="text-[#f4f4f7]"],
+html[data-theme="light"] .text-white:not(button[class*="bg-gradient-"] *):not([class*="bg-[#FF5C00]"] *):not([data-accent] [class*="bg-[#FF5C00]"] *):not([style*="var(--dynamic-accent)"] *):not([style*="linear-gradient"] *) {
+  color: #0f172a !important;
+}
+
+html[data-theme="light"] [class*="text-[#8A8A9E]"],
+html[data-theme="light"] [class*="text-[#8a8a9e]"] {
+  color: #64748b !important;
+}
+
+html[data-theme="light"] [class*="text-[#C2C2D1]"],
+html[data-theme="light"] [class*="text-[#c2c2d1]"] {
+  color: #334155 !important;
+}
+
+html[data-theme="light"] [class*="hover:text-[#F4F4F7]"]:hover,
+html[data-theme="light"] [class*="hover:text-[#f4f4f7]"]:hover {
+  color: #0f172a !important;
+}
+
+/* Preserve bright white text inside solid accent buttons & badges */
+html[data-theme="light"] button[class*="bg-gradient-"] *,
+html[data-theme="light"] div[class*="bg-gradient-"] *,
+html[data-theme="light"] [class*="bg-[#FF5C00]"] *,
+html[data-theme="light"] [data-accent] [class*="bg-[#FF5C00]"] *,
+html[data-theme="light"] [style*="var(--dynamic-accent)"] *,
+html[data-theme="light"] [style*="linear-gradient"] * {
+  color: #ffffff !important;
+}
+
+/* Borders in Light Mode */
+html[data-theme="light"] [class*="border-[#262635]"],
+html[data-theme="light"] [class*="border-[#2E2E42]"],
+html[data-theme="light"] [class*="border-[#3A3A4E]"],
+html[data-theme="light"] [class*="border-[#38384E]"],
+html[data-theme="light"] [class*="border-white/"] {
+  border-color: #cbd5e1 !important;
+}
+
+/* Seekbar & Volume cone in Light Mode */
+html[data-theme="light"] [class*="bg-[#262635]"] {
+  background-color: #e2e8f0 !important;
+}
+
+html[data-theme="light"] [class*="bg-[#3F3F57]"] {
+  background-color: #cbd5e1 !important;
+}
+
+html[data-theme="light"] polygon[class*="fill-[#262635]"],
+html[data-theme="light"] polygon.fill-\[\#262635\] {
+  fill: #e2e8f0 !important;
+}
+
+html[data-theme="light"] line[stroke="#16161E"] {
+  stroke: #cbd5e1 !important;
+}
+
+/* Glow helper utility */
+.glow-orange {
+  box-shadow: 0 0 24px -2px rgba(255, 92, 0, 0.35);
+}
+
+.glow-orange-sm {
+  box-shadow: 0 0 12px -1px rgba(255, 92, 0, 0.25);
+}
+
+/* Audio equalizer bar animations */
+@keyframes vlcEq1 {
+  0%, 100% { height: 20%; }
+  50% { height: 95%; }
+}
+@keyframes vlcEq2 {
+  0%, 100% { height: 80%; }
+  50% { height: 25%; }
+}
+@keyframes vlcEq3 {
+  0%, 100% { height: 35%; }
+  50% { height: 100%; }
+}
+@keyframes vlcEq4 {
+  0%, 100% { height: 90%; }
+  50% { height: 20%; }
+}
+
+.animate-vlc-eq-1 {
+  animation: vlcEq1 0.75s ease-in-out infinite;
+}
+.animate-vlc-eq-2 {
+  animation: vlcEq2 0.85s ease-in-out infinite;
+}
+.animate-vlc-eq-3 {
+  animation: vlcEq3 0.65s ease-in-out infinite;
+}
+.animate-vlc-eq-4 {
+  animation: vlcEq4 0.9s ease-in-out infinite;
+}
+
