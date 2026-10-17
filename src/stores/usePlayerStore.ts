@@ -22,7 +22,6 @@ import {
   DiscoveredSubtitleTrack,
 } from "../lib/subtitleScanner";
 import { triggerSubtitleDownload } from "../lib/subtitleParser";
-import { INITIAL_VIDEOS } from "../components/library/defaultMedia";
 import { saveWatchProgress, getSavedProgress } from "../lib/watchHistory";
 import { useSettingsStore } from "./useSettingsStore";
 
@@ -215,27 +214,49 @@ export interface PlayerStore extends PlaybackState, OverlayState {
 const QUEUE_STORAGE_KEY = "vlc_reborn_persistent_queue";
 const QUEUE_INDEX_STORAGE_KEY = "vlc_reborn_persistent_queue_index";
 
+const DUMMY_MEDIA_IDS = new Set([
+  "demo-sample",
+  "vid-1",
+  "vid-2",
+  "vid-3",
+  "mus-1",
+  "mus-2",
+  "mus-3",
+  "stream-nasa",
+  "stream-somafm",
+  "stream-mux-test",
+]);
+
 const loadPersistedQueue = (): { queue: MediaItem[]; currentQueueIndex: number } => {
   if (typeof window === "undefined") {
-    return { queue: [...INITIAL_VIDEOS], currentQueueIndex: 0 };
+    return { queue: [], currentQueueIndex: -1 };
   }
   try {
     const raw = localStorage.getItem(QUEUE_STORAGE_KEY);
     const rawIndex = localStorage.getItem(QUEUE_INDEX_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        const index = rawIndex !== null ? parseInt(rawIndex, 10) : 0;
-        return {
-          queue: parsed,
-          currentQueueIndex: isNaN(index) || index < 0 || index >= parsed.length ? 0 : index,
-        };
+      if (Array.isArray(parsed)) {
+        const cleanQueue = parsed.filter(
+          (item: MediaItem) =>
+            item &&
+            !DUMMY_MEDIA_IDS.has(item.id) &&
+            !item.src?.includes("demo-sample") &&
+            !item.src?.includes("commondatastorage.googleapis.com")
+        );
+        if (cleanQueue.length > 0) {
+          const index = rawIndex !== null ? parseInt(rawIndex, 10) : 0;
+          return {
+            queue: cleanQueue,
+            currentQueueIndex: isNaN(index) || index < 0 || index >= cleanQueue.length ? 0 : index,
+          };
+        }
       }
     }
   } catch (err) {
     console.warn("Failed loading persisted queue:", err);
   }
-  return { queue: [...INITIAL_VIDEOS], currentQueueIndex: 0 };
+  return { queue: [], currentQueueIndex: -1 };
 };
 
 const savePersistedQueue = (queue: MediaItem[], currentQueueIndex?: number) => {
@@ -284,21 +305,13 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   // Media & tracks
   currentMedia: null,
   subtitles: [],
-  audioTracks: [
-    { id: "aud-1", label: "Track 1: English (Stereo 2.0 - AAC)", language: "en", selected: true, type: "audio" },
-    { id: "aud-2", label: "Track 2: Director's Commentary", language: "en", selected: false, type: "audio" },
-    { id: "aud-3", label: "Track 3: French (5.1 Surround)", language: "fr", selected: false, type: "audio" },
-  ],
-  subtitleTracks: [
-    { id: "sub-1", label: "Track 1: English [Full]", language: "en", selected: true, type: "subtitle" },
-    { id: "sub-2", label: "Track 2: English [SDH]", language: "en", selected: false, type: "subtitle" },
-    { id: "sub-3", label: "Track 3: Spanish", language: "es", selected: false, type: "subtitle" },
-  ],
-  chapters: INITIAL_VIDEOS[0]?.chapters || [],
+  audioTracks: [],
+  subtitleTracks: [],
+  chapters: [],
 
   // Phase 3 Subtitle Sync State
   isSubtitleSyncOpen: false,
-  activeSubtitleName: "demo-sample.en.srt",
+  activeSubtitleName: null,
 
   // Phase 2 Deck Settings defaults
   subtitleSettings: DEFAULT_SUBTITLE_SETTINGS,
@@ -365,7 +378,15 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   // Media actions
   setCurrentMedia: (currentMedia) => {
     if (!currentMedia) {
-      set({ currentMedia: null, continueWatching: null, chapters: [] });
+      set({
+        currentMedia: null,
+        continueWatching: null,
+        chapters: [],
+        subtitles: [],
+        subtitleTracks: [],
+        audioTracks: [],
+        activeSubtitleName: null,
+      });
       return;
     }
 
@@ -407,9 +428,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         ? currentMedia.chapters
         : (isSameMedia && state.currentMedia?.chapters && state.currentMedia.chapters.length > 0)
         ? state.currentMedia.chapters
-        : INITIAL_VIDEOS.find(
-            (item) => item.id === currentMedia.id || item.src === currentMedia.src
-          )?.chapters || [];
+        : [];
 
     const resolvedDuration = currentMedia.duration || (isSameMedia ? state.duration : 0);
 
@@ -424,6 +443,10 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       currentTime: isSameMedia ? state.currentTime : 0,
       duration: resolvedDuration,
       chapters: resolvedChapters,
+      subtitles: isSameMedia ? state.subtitles : [],
+      subtitleTracks: isSameMedia ? state.subtitleTracks : [],
+      audioTracks: isSameMedia ? state.audioTracks : [],
+      activeSubtitleName: isSameMedia ? state.activeSubtitleName : null,
       playbackRate: isSameMedia ? state.playbackRate : defaultRate,
       videoSettings: (defaultRatio && defaultRatio !== "original" && !isSameMedia)
         ? { ...state.videoSettings, aspectRatio: defaultRatio }
@@ -757,9 +780,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     if (index < 0 || index >= queue.length) return;
     const item = queue[index];
     const resolvedChapters =
-      (item.chapters && item.chapters.length > 0)
-        ? item.chapters
-        : INITIAL_VIDEOS.find((v) => v.id === item.id || v.src === item.src)?.chapters || [];
+      (item.chapters && item.chapters.length > 0) ? item.chapters : [];
 
     set({
       currentQueueIndex: index,
@@ -772,6 +793,10 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       duration: item.duration || get().duration || 0,
       seekRequest: 0,
       chapters: resolvedChapters,
+      subtitles: [],
+      subtitleTracks: [],
+      audioTracks: [],
+      activeSubtitleName: null,
     });
 
     const saved = getSavedProgress(item.id || item.title || item.src);

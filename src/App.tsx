@@ -13,7 +13,7 @@ import { CompactLibrary } from "./components/library/CompactLibrary";
 import { QueueDrawer } from "./components/library/QueueDrawer";
 import { StreamModal } from "./components/library/StreamModal";
 import { importSubtitleFile } from "./lib/subtitleScanner";
-import { INITIAL_VIDEOS } from "./components/library/defaultMedia";
+import vlcConeSvg from "./assets/vlc-cone.svg";
 import { generateMediaThumbnail, generateMediaStoryboard } from "./lib/thumbnailGenerator";
 import { SettingsModal } from "./components/settings/SettingsModal";
 import { useSettingsStore } from "./stores/useSettingsStore";
@@ -67,6 +67,7 @@ export default function App() {
     addSubtitleTrack,
     autoDiscoverSubtitles,
     toggleSubtitleSync,
+    toggleStreamModal,
     queue,
     playNextTrack,
     playPreviousTrack,
@@ -550,13 +551,6 @@ export default function App() {
     return () => el.removeEventListener("wheel", onWheel);
   }, [setVolume, skipTime, showOsd, videoSettings.zoom]);
 
-  const loadDemoSample = () => {
-    setCurrentMedia(INITIAL_VIDEOS[0]);
-
-    // Auto-discover subtitle tracks (English .srt, Spanish .srt, Japanese .vtt)
-    autoDiscoverSubtitles("/demo-sample.mp4", "demo-sample.mp4");
-    setIsPlaying(true);
-  };
 
   // Find currently active subtitle cue based on playback timestamp and subtitle delay offset
   const effectiveSubtitleTime = currentTime - subtitleSettings.delay / 1000;
@@ -794,17 +788,17 @@ export default function App() {
                 style={{ backgroundColor: "var(--dynamic-accent-glow, rgba(255,92,0,0.25))" }}
               />
               <img
-                src="/src/assets/vlc-cone.svg"
+                src={vlcConeSvg}
                 alt="VLC Reborn"
-                className="relative w-28 h-28 drop-shadow-[0_12px_24px_var(--dynamic-accent-glow,rgba(255,92,0,0.35))] transition-transform hover:scale-105 duration-200"
+                className="relative w-28 h-28 drop-shadow-[0_12px_24px_var(--dynamic-accent-glow,rgba(255,92,0,0.35))] transition-transform hover:scale-105 duration-200 select-none"
               />
             </div>
 
-            <h1 className="text-3xl font-extrabold tracking-tight text-[#F4F4F7] mb-2">
+            <h1 className="text-3xl font-extrabold tracking-tight text-[#F4F4F7] mb-2 select-none">
               VLC Reborn
             </h1>
-            <p className="text-sm text-[#8A8A9E] mb-6 leading-relaxed max-w-sm">
-              Drop media files anywhere to initiate hardware-accelerated playback, or load a sample video to preview the new UI.
+            <p className="text-sm text-[#8A8A9E] mb-6 leading-relaxed max-w-sm select-none">
+              Drop media files anywhere to initiate hardware-accelerated playback, or choose a file from your computer.
             </p>
 
             <div className="flex items-center gap-3">
@@ -822,14 +816,15 @@ export default function App() {
 
               <button
                 type="button"
-                onClick={loadDemoSample}
+                onClick={toggleStreamModal}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#1F1F2B] hover:bg-[#2A2A3B] text-[#F4F4F7] text-sm font-medium border border-[#262635] hover:border-[#3A3A4E] transition-all cursor-pointer group"
+                title="Open Network Stream (Ctrl+U)"
               >
                 <Film
                   className="w-4 h-4 transition-transform group-hover:scale-110"
                   style={{ color: "var(--dynamic-accent, #FF5C00)" }}
                 />
-                <span>Load Sample Video</span>
+                <span>Open Stream URL</span>
               </button>
             </div>
           </div>

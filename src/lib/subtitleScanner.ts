@@ -36,7 +36,7 @@ async function invokeTauri<T>(cmd: string, args: Record<string, unknown>): Promi
  */
 export async function scanSubtitlesForMedia(
   mediaSrc: string,
-  mediaTitle: string
+  _mediaTitle: string
 ): Promise<DiscoveredSubtitleTrack[]> {
   // If Tauri desktop environment:
   if (isTauriEnvironment() && mediaSrc && !mediaSrc.startsWith("blob:") && !mediaSrc.startsWith("http")) {
@@ -71,42 +71,7 @@ export async function scanSubtitlesForMedia(
     }
   }
 
-  // If in browser or demo sample:
-  if (mediaTitle.includes("demo-sample") || mediaSrc.includes("demo-sample")) {
-    return [
-      {
-        id: "demo-en",
-        label: "Track 1: English (.SRT)",
-        language: "en",
-        selected: true,
-        type: "subtitle",
-        path: "/demo-sample.en.srt",
-        filename: "demo-sample.en.srt",
-        format: "srt",
-      },
-      {
-        id: "demo-es",
-        label: "Track 2: Español (.SRT)",
-        language: "es",
-        selected: false,
-        type: "subtitle",
-        path: "/demo-sample.es.srt",
-        filename: "demo-sample.es.srt",
-        format: "srt",
-      },
-      {
-        id: "demo-ja",
-        label: "Track 3: 日本語 (.VTT)",
-        language: "ja",
-        selected: false,
-        type: "subtitle",
-        path: "/demo-sample.ja.vtt",
-        filename: "demo-sample.ja.vtt",
-        format: "vtt",
-      },
-    ];
-  }
-
+  // Return empty if no real matching subtitle files found on disk
   return [];
 }
 

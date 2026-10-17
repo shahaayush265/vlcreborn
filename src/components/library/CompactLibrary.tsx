@@ -16,30 +16,47 @@ import {
 } from "lucide-react";
 import { usePlayerStore } from "../../stores/usePlayerStore";
 import { MediaItem, MediaType } from "../../types/player";
-import {
-  INITIAL_VIDEOS,
-  INITIAL_MUSIC,
-  INITIAL_STREAMS,
-} from "./defaultMedia";
 import { generateMediaThumbnail } from "../../lib/thumbnailGenerator";
 import { cn } from "../../lib/utils";
+import vlcConeSvg from "../../assets/vlc-cone.svg";
 
 const LIBRARY_VIDEOS_KEY = "vlc_reborn_library_videos";
 const LIBRARY_MUSIC_KEY = "vlc_reborn_library_music";
 const LIBRARY_STREAMS_KEY = "vlc_reborn_library_streams";
 
-const loadPersistedLibrary = <T extends MediaItem[]>(key: string, fallback: T): T => {
-  if (typeof window === "undefined") return fallback;
+const DUMMY_MEDIA_IDS = new Set([
+  "demo-sample",
+  "vid-1",
+  "vid-2",
+  "vid-3",
+  "mus-1",
+  "mus-2",
+  "mus-3",
+  "stream-nasa",
+  "stream-somafm",
+  "stream-mux-test",
+]);
+
+const loadPersistedLibrary = (key: string): MediaItem[] => {
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(key);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed as T;
+      if (Array.isArray(parsed)) {
+        return parsed.filter(
+          (item: MediaItem) =>
+            item &&
+            !DUMMY_MEDIA_IDS.has(item.id) &&
+            !item.src?.includes("demo-sample") &&
+            !item.src?.includes("commondatastorage.googleapis.com")
+        );
+      }
     }
   } catch (err) {
     console.warn(`Failed loading ${key}:`, err);
   }
-  return fallback;
+  return [];
 };
 
 export const CompactLibrary: React.FC = () => {
@@ -65,13 +82,13 @@ export const CompactLibrary: React.FC = () => {
 
   // Media library state with persistent storage support
   const [videos, setVideos] = useState<MediaItem[]>(() =>
-    loadPersistedLibrary(LIBRARY_VIDEOS_KEY, INITIAL_VIDEOS)
+    loadPersistedLibrary(LIBRARY_VIDEOS_KEY)
   );
   const [music, setMusic] = useState<MediaItem[]>(() =>
-    loadPersistedLibrary(LIBRARY_MUSIC_KEY, INITIAL_MUSIC)
+    loadPersistedLibrary(LIBRARY_MUSIC_KEY)
   );
   const [streams] = useState<MediaItem[]>(() =>
-    loadPersistedLibrary(LIBRARY_STREAMS_KEY, INITIAL_STREAMS)
+    loadPersistedLibrary(LIBRARY_STREAMS_KEY)
   );
 
   // Automatically persist changes across reloads
@@ -223,7 +240,7 @@ export const CompactLibrary: React.FC = () => {
               <div className="relative">
                 <div className="absolute -inset-1 rounded-full bg-[#FF5C00]/30 blur-sm" />
                 <img
-                  src="/src/assets/vlc-cone.svg"
+                  src={vlcConeSvg}
                   alt="VLC"
                   className="relative w-6 h-6 drop-shadow-[0_2px_8px_rgba(255,92,0,0.5)]"
                 />

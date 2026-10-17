@@ -17,4 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libfuse2t64 \
     squashfs-tools \
     ca-certificates \
+    gcc-mingw-w64-x86-64 \
+    binutils-mingw-w64-x86-64 \
+    mingw-w64-x86-64-dev \
     && rm -rf /var/lib/apt/lists/*

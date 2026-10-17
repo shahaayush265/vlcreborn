@@ -6,7 +6,8 @@ pub fn run() {
     .invoke_handler(tauri::generate_handler![
       fs_scanner::scan_subtitles_for_file,
       fs_scanner::read_subtitle_file,
-      fs_scanner::save_subtitle_file
+      fs_scanner::save_subtitle_file,
+      fs_scanner::extract_thumbnail_native
     ])
     .setup(|app| {
       if cfg!(debug_assertions) {

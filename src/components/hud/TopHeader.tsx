@@ -14,6 +14,7 @@ import {
 import { usePlayerStore } from "../../stores/usePlayerStore";
 import { useSettingsStore } from "../../stores/useSettingsStore";
 import { cn } from "../../lib/utils";
+import vlcConeSvg from "../../assets/vlc-cone.svg";
 
 interface TopHeaderProps {
   isIdle: boolean;
@@ -119,6 +120,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ isIdle, videoElement }) =>
 
   return (
     <header
+      data-tauri-drag-region
       className={cn(
         "absolute top-0 left-0 right-0 z-35 transition-all duration-300 pointer-events-none select-none",
         isVisible
@@ -127,9 +129,10 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ isIdle, videoElement }) =>
       )}
     >
       <div
+        data-tauri-drag-region
         onClick={(e) => e.stopPropagation()}
         className={cn(
-          "pointer-events-auto flex items-center justify-between px-5 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_8px_32px_rgba(0,0,0,0.5)] transition-all duration-200",
+          "pointer-events-auto flex items-center justify-between px-4 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_8px_32px_rgba(0,0,0,0.5)] transition-all duration-200",
           acrylicTexture === "solid"
             ? "bg-[#0D0D15] border-b border-white/[0.08]"
             : acrylicTexture === "glass"
@@ -137,8 +140,20 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ isIdle, videoElement }) =>
             : "bg-[#0D0D15]/80 backdrop-blur-3xl backdrop-saturate-180 border-b border-white/[0.08]"
         )}
       >
-        {/* Left: Breadcrumbs & Library trigger */}
-        <div className="flex items-center gap-2 text-xs font-medium text-[#8A8A9E] select-none">
+        {/* Left: App Logo Badge, Library trigger & Breadcrumbs */}
+        <div className="flex items-center gap-2.5 text-xs font-medium text-[#8A8A9E] select-none shrink-0" data-tauri-drag-region>
+          {/* VLC Reborn Logo */}
+          <div className="flex items-center gap-2 pr-1.5 py-0.5" data-tauri-drag-region>
+            <img
+              src={vlcConeSvg}
+              alt="VLC"
+              className="w-5 h-5 drop-shadow-[0_2px_8px_rgba(255,92,0,0.5)] select-none pointer-events-none"
+            />
+            <span className="font-bold text-xs tracking-wide text-white/95 hidden sm:inline" data-tauri-drag-region>
+              VLC
+            </span>
+          </div>
+
           <button
             type="button"
             onClick={toggleLibrary}
@@ -156,9 +171,9 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ isIdle, videoElement }) =>
             <>
               <ChevronRight className="w-3.5 h-3.5 text-[#8A8A9E]/60" />
 
-              <div className="flex items-center gap-1.5 text-[#8A8A9E]">
+              <div className="flex items-center gap-1.5 text-[#8A8A9E]" data-tauri-drag-region>
                 <Folder className="w-3.5 h-3.5" />
-                <span className="hover:text-[#F4F4F7] transition-colors truncate max-w-[140px]">
+                <span className="hover:text-[#F4F4F7] transition-colors truncate max-w-[140px]" data-tauri-drag-region>
                   {breadcrumbParts[0]}
                 </span>
               </div>
@@ -166,7 +181,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ isIdle, videoElement }) =>
               {breadcrumbParts.length > 1 && (
                 <>
                   <ChevronRight className="w-3.5 h-3.5 text-[#8A8A9E]/60" />
-                  <span className="text-[#F4F4F7] font-semibold truncate max-w-[240px]">
+                  <span className="text-[#F4F4F7] font-semibold truncate max-w-[240px]" data-tauri-drag-region>
                     {breadcrumbParts[breadcrumbParts.length - 1]}
                   </span>
                 </>
@@ -175,8 +190,11 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ isIdle, videoElement }) =>
           )}
         </div>
 
+        {/* Center: Draggable Spacer for window moving */}
+        <div data-tauri-drag-region className="flex-1 h-8 mx-2 cursor-grab active:cursor-grabbing" />
+
         {/* Right: PiP, Fullscreen, and Window Controls */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 shrink-0">
           {/* Picture in Picture */}
           {document.pictureInPictureEnabled && (
             <button

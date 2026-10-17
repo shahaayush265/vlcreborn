@@ -174,3 +174,32 @@ pub fn read_subtitle_file(file_path: String) -> Result<String, String> {
 pub fn save_subtitle_file(file_path: String, content: String) -> Result<(), String> {
     fs::write(&file_path, content).map_err(|e| format!("Failed to write subtitle file: {}", e))
 }
+
+/// Extracts a high-resolution video thumbnail frame using ffmpeg if present on system
+#[tauri::command]
+pub fn extract_thumbnail_native(file_path: String, seek_time_secs: Option<f64>) -> Result<String, String> {
+    let seek_val = seek_time_secs.unwrap_or(1.5).max(0.1);
+    let seek_str = format!("{:.2}", seek_val);
+
+    let output = std::process::Command::new("ffmpeg")
+        .args([
+            "-ss", &seek_str,
+            "-i", &file_path,
+            "-vframes", "1",
+            "-vf", "scale=360:-1",
+            "-f", "image2pipe",
+            "-vcodec", "mjpeg",
+            "-",
+        ])
+        .output()
+        .map_err(|e| format!("ffmpeg execution failed: {}", e))?;
+
+    if output.status.success() && !output.stdout.is_empty() {
+        use base64::Engine;
+        let b64 = base64::engine::general_purpose::STANDARD.encode(&output.stdout);
+        Ok(format!("data:image/jpeg;base64,{}", b64))
+    } else {
+        Err("ffmpeg exited with non-zero status or empty output".to_string())
+    }
+}
+

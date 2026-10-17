@@ -1,6 +1,7 @@
 /**
- * High-performance browser-native video thumbnail & storyboard extraction.
- * Extracts representative frames and storyboards from local video files or URLs using an offscreen canvas.
+ * High-performance video thumbnail & storyboard extraction.
+ * Supports native desktop acceleration in Tauri (via ffmpeg) as well as
+ * WebKitGTK/Blink-compatible HTML5 offscreen canvas extraction for blob URLs.
  */
 
 export interface StoryboardFrame {
@@ -10,6 +11,10 @@ export interface StoryboardFrame {
 
 // Global in-memory cache for media storyboards and decoded scrub frames
 const storyboardCache = new Map<string, StoryboardFrame[]>();
+
+export function isTauriEnvironment(): boolean {
+  return typeof window !== "undefined" && ("__TAURI_INTERNALS__" in window || "__TAURI__" in window);
+}
 
 /**
  * Retrieve the nearest cached frame for a given media source and timestamp.
@@ -55,7 +60,6 @@ export function cacheStoryboardFrame(
     storyboardCache.set(sourceUrl, frames);
   }
 
-  // Update or insert frame
   const existingIdx = frames.findIndex((f) => Math.abs(f.time - time) < 0.25);
   if (existingIdx >= 0) {
     frames[existingIdx] = { time, dataUrl };
@@ -83,6 +87,32 @@ export async function generateMediaThumbnail(
     if (isAudio) return undefined;
   }
 
+  // 1. Fast Native Desktop Extraction (Tauri + ffmpeg) if file path exists
+  const rawPath =
+    typeof source === "string"
+      ? (source.startsWith("file://")
+          ? decodeURIComponent(source.replace(/^file:\/\//, ""))
+          : (!source.startsWith("http") && !source.startsWith("blob:") ? source : undefined))
+      : ((source as any).path || (source as any).webkitRelativePath || undefined);
+
+  if (rawPath && isTauriEnvironment()) {
+    try {
+      const { invoke } = await import("@tauri-apps/api/core");
+      const nativeThumb = await invoke<string>("extract_thumbnail_native", {
+        filePath: rawPath,
+        seekTimeSecs,
+      });
+      if (nativeThumb && nativeThumb.startsWith("data:image/")) {
+        const cacheKey = typeof source === "string" ? source : source.name;
+        cacheStoryboardFrame(cacheKey, seekTimeSecs, nativeThumb);
+        return nativeThumb;
+      }
+    } catch {
+      // Fall through to HTML5 canvas extraction
+    }
+  }
+
+  // 2. High-Compatibility HTML5 Offscreen Video Extractor (WebKitGTK & Chromium)
   return new Promise((resolve) => {
     let createdLocalUrl = false;
     let url: string;
@@ -98,7 +128,23 @@ export async function generateMediaThumbnail(
     video.muted = true;
     video.playsInline = true;
     video.preload = "auto";
-    video.crossOrigin = "anonymous";
+
+    // CRITICAL: Only set crossOrigin on remote HTTP/HTTPS URLs.
+    // In WebKitGTK / Safari, setting crossOrigin on a blob: or local URL fails with a security CORS error.
+    if (typeof source === "string" && (source.startsWith("http://") || source.startsWith("https://"))) {
+      video.crossOrigin = "anonymous";
+    }
+
+    // CRITICAL: WebKitGTK requires the video element to be attached to the document DOM
+    // to allocate the GStreamer video rendering sink and decode frame buffers.
+    video.style.position = "fixed";
+    video.style.top = "-9999px";
+    video.style.left = "-9999px";
+    video.style.width = "16px";
+    video.style.height = "16px";
+    video.style.opacity = "0";
+    video.style.pointerEvents = "none";
+    document.body.appendChild(video);
 
     let isDone = false;
 
@@ -106,67 +152,135 @@ export async function generateMediaThumbnail(
       if (isDone) return;
       isDone = true;
       clearTimeout(timeoutId);
-      video.removeEventListener("loadeddata", onLoadedData);
+      video.removeEventListener("loadedmetadata", onMetadata);
+      video.removeEventListener("loadeddata", onDataReady);
+      video.removeEventListener("canplay", onDataReady);
       video.removeEventListener("seeked", onSeeked);
       video.removeEventListener("error", onError);
+      video.pause();
       video.src = "";
       video.load();
+      if (video.parentNode) {
+        video.parentNode.removeChild(video);
+      }
       if (createdLocalUrl) {
         URL.revokeObjectURL(url);
       }
     };
 
     const timeoutId = setTimeout(() => {
-      cleanup();
-      resolve(undefined);
-    }, 4000);
+      // Last-chance attempt before timeout
+      if (!tryCapture()) {
+        cleanup();
+        resolve(undefined);
+      }
+    }, 6000);
 
     const onError = () => {
       cleanup();
       resolve(undefined);
     };
 
-    const onSeeked = () => {
-      try {
-        if (video.videoWidth > 0 && video.videoHeight > 0) {
+    const tryCapture = (): boolean => {
+      if (isDone) return false;
+      const vw = video.videoWidth;
+      const vh = video.videoHeight;
+      if (vw > 0 && vh > 0) {
+        try {
           const canvas = document.createElement("canvas");
           canvas.width = 320;
-          canvas.height = Math.round((320 * video.videoHeight) / video.videoWidth);
-          const ctx = canvas.getContext("2d");
+          canvas.height = Math.max(1, Math.round((320 * vh) / vw));
+          const ctx = canvas.getContext("2d", { willReadFrequently: true });
           if (ctx) {
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
-            cacheStoryboardFrame(url, video.currentTime, dataUrl);
-            cleanup();
-            resolve(dataUrl);
-            return;
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+            if (dataUrl && dataUrl.length > 200 && dataUrl !== "data:,") {
+              const cacheKey = typeof source === "string" ? source : source.name;
+              cacheStoryboardFrame(cacheKey, video.currentTime, dataUrl);
+              cleanup();
+              resolve(dataUrl);
+              return true;
+            }
           }
+        } catch (err) {
+          console.warn("Failed drawing thumbnail frame:", err);
         }
-      } catch (err) {
-        console.warn("Failed drawing thumbnail frame:", err);
       }
-      cleanup();
-      resolve(undefined);
+      return false;
     };
 
-    const onLoadedData = () => {
+    let hasSought = false;
+    const seekToDesiredTime = () => {
+      if (hasSought || isDone) return;
+      hasSought = true;
       try {
+        const dur = video.duration;
         const target =
-          video.duration && isFinite(video.duration) && video.duration > 0
-            ? Math.min(seekTimeSecs, Math.max(0.5, video.duration * 0.15))
+          dur && isFinite(dur) && dur > 0
+            ? Math.min(seekTimeSecs, Math.max(0.1, dur * 0.15))
             : seekTimeSecs;
-        video.currentTime = target;
+
+        if (Math.abs(video.currentTime - target) < 0.05) {
+          onSeeked();
+        } else {
+          video.currentTime = target;
+        }
       } catch {
-        cleanup();
-        resolve(undefined);
+        tryCapture();
       }
     };
 
-    video.addEventListener("loadeddata", onLoadedData);
+    const onSeeked = () => {
+      requestAnimationFrame(() => {
+        if (!tryCapture()) {
+          setTimeout(() => {
+            if (!tryCapture()) {
+              // WebKitGTK preroll tick: brief play to force decoder frame flush
+              const p = video.play();
+              if (p !== undefined) {
+                p.then(() => {
+                  video.pause();
+                  tryCapture();
+                }).catch(() => {});
+              }
+            }
+          }, 80);
+        }
+      });
+    };
+
+    const onMetadata = () => {
+      if (isDone) return;
+      seekToDesiredTime();
+    };
+
+    const onDataReady = () => {
+      if (isDone) return;
+      if (!hasSought) {
+        seekToDesiredTime();
+      } else {
+        tryCapture();
+      }
+    };
+
+    video.addEventListener("loadedmetadata", onMetadata);
+    video.addEventListener("loadeddata", onDataReady);
+    video.addEventListener("canplay", onDataReady);
     video.addEventListener("seeked", onSeeked);
     video.addEventListener("error", onError);
 
     video.src = url;
+    video.load();
+
+    // Start muted play tick to initiate WebKitGTK pipeline decoding
+    const initPlay = video.play();
+    if (initPlay !== undefined) {
+      initPlay.then(() => {
+        if (video.currentTime >= 0.1) {
+          video.pause();
+        }
+      }).catch(() => {});
+    }
   });
 }
 
@@ -207,7 +321,19 @@ export async function generateMediaStoryboard(
     video.muted = true;
     video.playsInline = true;
     video.preload = "auto";
-    video.crossOrigin = "anonymous";
+
+    if (typeof source === "string" && (source.startsWith("http://") || source.startsWith("https://"))) {
+      video.crossOrigin = "anonymous";
+    }
+
+    video.style.position = "fixed";
+    video.style.top = "-9999px";
+    video.style.left = "-9999px";
+    video.style.width = "16px";
+    video.style.height = "16px";
+    video.style.opacity = "0";
+    video.style.pointerEvents = "none";
+    document.body.appendChild(video);
 
     const frames: StoryboardFrame[] = [];
     let currentIndex = 0;
@@ -221,8 +347,12 @@ export async function generateMediaStoryboard(
       video.removeEventListener("loadedmetadata", onMetadata);
       video.removeEventListener("seeked", onSeeked);
       video.removeEventListener("error", onError);
+      video.pause();
       video.src = "";
       video.load();
+      if (video.parentNode) {
+        video.parentNode.removeChild(video);
+      }
       if (createdLocalUrl) {
         URL.revokeObjectURL(url);
       }
@@ -232,7 +362,7 @@ export async function generateMediaStoryboard(
       cleanup();
       storyboardCache.set(sourceKey, frames);
       resolve(frames);
-    }, 8000);
+    }, 10000);
 
     const onError = () => {
       cleanup();
@@ -308,5 +438,6 @@ export async function generateMediaStoryboard(
     video.addEventListener("seeked", onSeeked);
     video.addEventListener("error", onError);
     video.src = url;
+    video.load();
   });
 }

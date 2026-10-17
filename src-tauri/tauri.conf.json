@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "vlcreborn",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "identifier": "com.vlcreborn.desktop",
   "build": {
     "frontendDist": "../dist",
@@ -12,11 +12,15 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "VLC Reborn",
-        "width": 800,
-        "height": 600,
+        "width": 1000,
+        "height": 650,
+        "minWidth": 640,
+        "minHeight": 480,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "decorations": false
       }
     ],
     "security": {
@@ -31,7 +35,8 @@
       "icons/128x128.png",
       "icons/128x128@2x.png",
       "icons/icon.icns",
-      "icons/icon.ico"
+      "icons/icon.ico",
+      "icons/icon.png"
     ],
     "android": {
       "debugApplicationIdSuffix": ".debug"
