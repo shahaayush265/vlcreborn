@@ -2,7 +2,34 @@
   "name": "vlcreborn",
   "private": true,
   "version": "1.0.0",
+  "description": "Next-generation cross-platform open-source media player reimagining VLC with a modern frosted glass HUD, 10-band graphic equalizer, and frame-accurate scrubbing powered by Tauri v2, Rust, and React 19.",
   "type": "module",
+  "keywords": [
+    "vlc",
+    "vlc-player",
+    "media-player",
+    "tauri",
+    "tauri-v2",
+    "rust",
+    "react",
+    "react-19",
+    "audio-player",
+    "video-player",
+    "equalizer",
+    "cross-platform",
+    "frosted-glass-ui",
+    "open-source"
+  ],
+  "author": "Aayush Shah (https://github.com/shahaayush265)",
+  "license": "GPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shahaayush265/vlcreborn.git"
+  },
+  "homepage": "https://github.com/shahaayush265/vlcreborn#readme",
+  "bugs": {
+    "url": "https://github.com/shahaayush265/vlcreborn/issues"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
