@@ -4,8 +4,8 @@
 
 **The iconic open-source media player, reimagined with modern aesthetics, hardware-accelerated fluid playback, and pro-grade audio/video controls.**
 
-[![Release](https://img.shields.io/badge/Release-v1.0.0-orange.svg?style=for-the-badge&logo=vlc)](https://github.com/vlcreborn/vlcreborn/releases/tag/v1.0.0)
-[![Platforms](https://img.shields.io/badge/Platforms-Linux%20%7C%20Windows%20%7C%20macOS%20%7C%20Android-blue.svg?style=for-the-badge)](https://github.com/vlcreborn/vlcreborn/releases)
+[![Release](https://img.shields.io/badge/Release-v1.0.0-orange.svg?style=for-the-badge&logo=vlc)](https://github.com/shahaayush265/vlcreborn/releases/tag/v1.0.0)
+[![Platforms](https://img.shields.io/badge/Platforms-Linux%20%7C%20Windows%20%7C%20macOS%20%7C%20Android-blue.svg?style=for-the-badge)](https://github.com/shahaayush265/vlcreborn/releases)
 [![Tauri](https://img.shields.io/badge/Tauri-v2.2-24C8D8.svg?style=for-the-badge&logo=tauri)](https://tauri.app)
 [![React](https://img.shields.io/badge/React-19-61DAFB.svg?style=for-the-badge&logo=react)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6.svg?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org)
@@ -69,7 +69,7 @@
 
 ## 📦 Downloads & Installation
 
-Pre-built binaries for release **v1.0.0** are available on the [Releases page](https://github.com/vlcreborn/vlcreborn/releases/tag/v1.0.0).
+Pre-built binaries for release **v1.0.0** are available on the [Releases page](https://github.com/shahaayush265/vlcreborn/releases/tag/v1.0.0).
 
 ### 🐧 Linux
 
@@ -197,7 +197,7 @@ VLC Reborn uses Tauri v2's native multi-platform engine to ensure consistent beh
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/vlcreborn/vlcreborn.git
+   git clone https://github.com/shahaayush265/vlcreborn.git
    cd vlcreborn
    ```
 
